@@ -7,16 +7,16 @@
 
 package io.pleo.antaeus.data
 
-import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Customer
-import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import io.pleo.antaeus.models.*
+import mu.KotlinLogging
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+private val logger = KotlinLogging.logger {}
 
 class AntaeusDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
@@ -36,6 +36,18 @@ class AntaeusDal(private val db: Database) {
                 .selectAll()
                 .map { it.toInvoice() }
         }
+    }
+
+    fun updateInvoice(invoice: Invoice): Invoice {
+        transaction(db) {
+            addLogger(SafeSqlLogger)
+            InvoiceTable.update({ InvoiceTable.id eq invoice.id }) {
+                it[this.currency] = invoice.amount.currency.toString()
+                it[this.status] = invoice.status.toString()
+                it[this.customerId] = invoice.customerId
+            }
+        }
+        return invoice
     }
 
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
@@ -79,5 +91,14 @@ class AntaeusDal(private val db: Database) {
         }
 
         return fetchCustomer(id)
+    }
+
+    object SafeSqlLogger : SqlLogger {
+
+        private val log: Logger = LoggerFactory.getLogger(SafeSqlLogger::class.java)
+
+        override fun log(context: StatementContext, transaction: Transaction) {
+            log.debug(context.sql(TransactionManager.current()))
+        }
     }
 }
