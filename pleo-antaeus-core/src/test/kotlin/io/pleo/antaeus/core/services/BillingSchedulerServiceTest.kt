@@ -9,7 +9,7 @@ import java.time.LocalDate
 class BillingSchedulerServiceTest {
 
     private val billingService = mockk<BillingService>() {
-        every { processInvoices() } returns emptyList()
+        every { processInvoices() }
     }
 
     private val billingSchedulerService = BillingSchedulerService(billingService)
