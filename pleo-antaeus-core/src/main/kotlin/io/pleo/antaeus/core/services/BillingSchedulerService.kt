@@ -1,5 +1,7 @@
 package io.pleo.antaeus.core.services
 
+import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
+import io.pleo.antaeus.core.exceptions.FailedPaymentException
 import mu.KotlinLogging
 import java.time.LocalDate
 import java.util.*
@@ -17,7 +19,7 @@ class BillingSchedulerService(private val billingService: BillingService) {
     * The scheduler will keep running until the day of the month is reached.
     * */
     fun start(
-        processingDay: Int = 1,
+        processingDay: Int = 12,
         startOn: Long = TimeUnit.SECONDS.toMillis(5), // 5 seconds after the server starts
         repeatOn: Long = TimeUnit.SECONDS.toMillis(10) // repeat every 10 seconds
     ) {
@@ -26,7 +28,11 @@ class BillingSchedulerService(private val billingService: BillingService) {
             val dayOfTheMonth = LocalDate.now().dayOfMonth
             if (dayOfTheMonth == processingDay) {
                 logger.info { "Start processing invoices." }
-                billingService.processInvoices()
+                try {
+                    billingService.processInvoices()
+                } catch (e: FailedPaymentException) {
+                    logger.error { "Payment failed. Retry will happen in a few seconds." }
+                }
             } else {
                 logger.info { "Today is not first day of the month, skip processing invoices." }
             }
