@@ -24,6 +24,9 @@ fun Project.kotlinProject() {
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:$junitVersion")
         "testImplementation"("org.junit.jupiter:junit-jupiter-params:$junitVersion")
         "runtime"("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+
+        // AssertJ
+        "testImplementation"("org.assertj:assertj-core:3.22.0")
     }
 }
 
