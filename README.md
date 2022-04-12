@@ -86,3 +86,21 @@ The code given is structured as follows. Feel free however to modify the structu
 * [Sqlite3](https://sqlite.org/index.html) - Database storage engine
 
 Happy hacking 😁!
+
+
+### Solution
+
+- The implementation followed the instructions and will run a background job on every 10 seconds, but will only process invoices on the configured date (first of the month default)
+- As the scheduler keeps running, we got a retry when failed for free, when the application is started, it will run the scheduler until the point it will process all payments
+- The billing service was implemented with a lot of naive approaches (all documented how it could be improved)
+
+### Improvements
+
+- Improve resilience on billing service
+  - retries to recover from network glitches or payment provider unstable
+  - backoff retry to recover from insufficient balance
+  - a queueing system to handle better the payments that need to be processed or not, dead letter queue for things that need manual intervention
+- Improve scheduling on billing scheduler
+  - Use something more robust than a regular Timer.schedule
+
+Disclaimer: That was the first time I wrote Kotlin 
